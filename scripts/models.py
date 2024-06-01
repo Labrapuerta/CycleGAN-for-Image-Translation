@@ -6,7 +6,6 @@ import tensorflow.keras as keras
 import tensorflow.keras.layers as layers
 
 
-### Define the Downsample Block
 class Downsample(keras.layers.Layer):
     def __init__(self,filters, kernel_size = (2,2), strides=(2, 2), padding='same', activation = 'leaky_relu', **kwargs):
         

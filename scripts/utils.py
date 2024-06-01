@@ -2,20 +2,20 @@ from sklearn.decomposition import PCA
 from tensorflow.keras.preprocessing.image import load_img
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import tensorflow as tf
+import shutil
+import kaggle
+import os
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 IMAGE_SIZE = [256, 256]
 
 def apply_pca_and_visualize(convolved_images):
-    # Flatten the convolved images
     shape = convolved_images.shape
     normalized_image = convolved_images / 255.0
     reshaped_image = tf.reshape(normalized_image, (-1, shape[-1]))
     reshaped_array = reshaped_image.numpy()
-    # Apply PCA
     pca = PCA(n_components=1)
     pca_result = pca.fit_transform(reshaped_array)
-    # Reshape back
     pca_image_reshaped = pca_result.reshape(shape[0], shape[1], 1)
     return pca_image_reshaped
 
@@ -43,3 +43,12 @@ def load_dataset(filenames, labeled=True, ordered=False, repeat = False):
     dataset = dataset.shuffle(1000)
     dataset = dataset.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
     return dataset
+
+def download_dataset(dataset_name = 'darren2020/ct-to-mri-cgan'):
+    kaggle.api.authenticate()
+    try:
+        shutil.rmtree('data')
+    except:
+        pass
+    os.mkdir('data')
+    kaggle.api.dataset_download_files(dataset_name, path='data', unzip=True)
