@@ -14,13 +14,15 @@ class Downsample(keras.layers.Layer):
         self.gamma_init = keras.initializers.RandomNormal(mean=0.0, stddev=0.02)
         self.conv = layers.Conv2D(filters, kernel_size = kernel_size, 
                                   strides = strides, padding = padding, kernel_initializer = self.initializer)
-        self.bn = layers.BatchNormalization()
         self.activation = layers.Activation(activation = activation)
+        self.gn = layers.GroupNormalization(groups = 1)
+
         
     def call(self, inputs,training = False):
         x = self.conv(inputs)
-        x = self.bn(x, training = training)
         x = self.activation(x)
+        x = self.gn(x, training = training)
+
         
         return x
     
@@ -42,17 +44,17 @@ class Upsample(keras.layers.Layer):
         self.initializer = tf.random_normal_initializer(0., 0.02)
         self.conv = layers.Conv2DTranspose(filters, kernel_size = kernel_size, 
                                            strides = strides, padding = padding, kernel_initializer = self.initializer)
-        self.bn = layers.BatchNormalization()
         self.dropout = layers.Dropout(dropout)
         self.activation = layers.Activation(activation = activation)
+        self.gn = layers.GroupNormalization(groups = 1)
+
     
     def call(self, inputs,training = False, dropout = False):
         x = self.conv(inputs)
-        x = self.bn(x, training = training)
         if dropout:
             x = self.dropout(x)
         x = self.activation(x)
-        
+        x = self.gn(x, training = training)
         return x
     
     def get_config(self):

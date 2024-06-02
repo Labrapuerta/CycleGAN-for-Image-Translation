@@ -3,6 +3,8 @@ from tensorflow.keras.preprocessing.image import load_img
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import tensorflow as tf
 import shutil
+from PIL import Image
+import numpy as np
 import kaggle
 import os
 
@@ -52,3 +54,18 @@ def download_dataset(dataset_name = 'darren2020/ct-to-mri-cgan'):
         pass
     os.mkdir('data')
     kaggle.api.dataset_download_files(dataset_name, path='data', unzip=True)
+
+def photo_mean_size(image_dir):
+    heights = []
+    widths = []
+    for filename in os.listdir(image_dir):
+        if filename.endswith(".png") or filename.endswith(".jpg") or filename.endswith(".jpeg"):
+            filepath = os.path.join(image_dir, filename)
+            with Image.open(filepath) as img:
+                width, height = img.size
+                widths.append(width)
+                heights.append(height)
+    
+    mean_height = np.mean(heights)
+    mean_width = np.mean(widths)
+    return int(mean_width), int(mean_height)
