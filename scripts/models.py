@@ -22,8 +22,6 @@ class Downsample(keras.layers.Layer):
         x = self.conv(inputs)
         x = self.activation(x)
         x = self.gn(x, training = training)
-
-        
         return x
     
     def get_config(self):
