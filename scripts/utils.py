@@ -60,18 +60,72 @@ def photo_mean_size(image_dir):
     mean_width = np.mean(widths)
     return int(mean_width), int(mean_height), channels
 
+### TF dataset
 def preprocess_image(image, target_size = (256,256)):
     image =  smart_resize(image, target_size)
-    image /= 255.0
     return image
 
-def load_and_preprocess_image(file_path, target_size=(256, 256)):
+def load_and_preprocess_image(file_path, channels, target_size=(256, 256) ):
     image = tf.io.read_file(file_path)
-    image = tf.image.decode_image(image, channels=3)
+    if channels == 1:
+        image = tf.image.decode_jpeg(image, channels=channels)
+        image = tf.image.grayscale_to_rgb(image)
+    else:
+        image = tf.image.decode_png(image, channels=channels)
+    image = tf.image.convert_image_dtype(image, tf.float32)   
     image = preprocess_image(image, target_size)
     return image
 
-def create_dataset(directory, target_size=(256, 256), batch_size=36):
-    dataset = tf.data.Dataset.list_files(f'{directory}/*') 
-    dataset = dataset.map(lambda x: load_and_preprocess_image(x, target_size), num_parallel_calls=AUTOTUNE)
+def create_dataset(directory, target_size=(256, 256), channels = 3):
+    dataset = tf.io.gfile.glob(str(f'{directory}/*'))
+    dataset = tf.data.Dataset.from_tensor_slices(dataset)
+    dataset = dataset.map(lambda x: load_and_preprocess_image(x, channels, target_size), num_parallel_calls=AUTOTUNE)
     return dataset
+
+### Visualize the training
+class callbacks(tf.keras.callbacks.Callback):
+    def on_epoch_end(self, epoch, logs={}):
+        ### Every 5 epochs plot the generator
+        randomint = np.random.randint(0,8,1)[0]
+        if epoch != 0:
+            fig, axes = plt.subplots(nrows=1, ncols=4, figsize=(15, 4))
+            fig.suptitle(f'Generator evolution epoch #{epoch}', fontsize=16)
+            ax = axes[0]
+            ax.imshow(test_ct[randomint])
+            axes[0].set_title('Original CT', size='large', loc='center')
+            ax.axis('off')
+            ax = axes[1]
+            ax.imshow(cycle_gan.mri_generator_(test_ct)[randomint])
+            axes[1].set_title('CT to MRI', size='large', loc='center')
+            ax.axis('off')
+            ax = axes[2]
+            ax.imshow(test_mri[randomint])
+            axes[2].set_title('Original MRI', size='large', loc='center')
+            ax.axis('off')
+            ax = axes[3]
+            ax.imshow(cycle_gan.ct_generator_(test_mri)[randomint])
+            axes[3].set_title('MRI to CT', size='large', loc='center')
+            ax.axis('off')
+            plt.show()
+        if epoch == 0:
+            fig, axes = plt.subplots(nrows=1, ncols=4, figsize=(15, 4))
+            fig.suptitle(f'Starting point', fontsize=16)
+            ax = axes[0]
+            ax.imshow(test_ct[randomint])
+            axes[0].set_title('Original CT', size='large', loc='center')
+            ax.axis('off')
+            ax = axes[1]
+            ax.imshow(cycle_gan.mri_generator_(test_ct)[randomint])
+            axes[1].set_title('CT to MRI', size='large', loc='center')
+            ax.axis('off')
+            ax = axes[2]
+            ax.imshow(test_mri[randomint])
+            axes[2].set_title('Original MRI', size='large', loc='center')
+            ax.axis('off')
+            ax = axes[3]
+            ax.imshow(cycle_gan.ct_generator_(test_mri)[randomint])
+            axes[3].set_title('MRI to CT', size='large', loc='center')
+            ax.axis('off')
+            plt.show()
+            
+callback = callbacks()
