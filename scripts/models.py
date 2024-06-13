@@ -89,7 +89,7 @@ class Generator(tf.keras.Model):
         self.output_channels = output_channels
         
         # Downsampling layers
-        self.downsample1 = Downsample(64, kernel_size=(3, 3), strides=(1, 1), name='Downsample_360')   # (bs, 360, 360, 64)
+        self.downsample1 = Downsample(64, kernel_size=(5, 5), strides=(1, 1), name='Downsample_360')   # (bs, 360, 360, 64)
         self.downsample2 = Downsample(128, name='Downsample_180')                                      # (bs, 180, 180, 128)
         self.downsample3 = Downsample(256, name='Downsample_90')                                       # (bs, 90, 90, 256)
         self.downsample4 = Downsample(256, name='Downsample_30', strides=(3, 3))                       # (bs, 30, 30, 256)
@@ -105,7 +105,7 @@ class Generator(tf.keras.Model):
         self.upsample2 = Upsample(256, name='Upsample_90', strides=(3, 3))                             # (bs, 90, 90, 256)
         self.upsample3 = Upsample(128, name='Upsample_180')                                            # (bs, 180, 180, 128)
         self.upsample4 = Upsample(64, name='Upsample_360')                                             # (bs, 360, 360, 64)
-        self.upsample5 = Upsample(self.output_channels, activation='tanh', kernel_size=(3, 3), strides=(1, 1), name='Final_layer')  # (bs, 360, 360, output_channels)
+        self.upsample5 = Upsample(self.output_channels, activation='tanh', kernel_size=(5, 5), strides=(1, 1), name='Final_layer')  # (bs, 360, 360, output_channels)
    
     def call(self, inputs, training=False):
         # Downsampling
@@ -116,9 +116,9 @@ class Generator(tf.keras.Model):
         d5 = self.downsample5(d4, training=training)
         
         ## Residual Blocks
-        r1 = self.residual1(d5)
-        r2 = self.residual2(r1)
-        r3 = self.residual3(r2)
+        r1 = self.residual1(d, training=training)
+        r2 = self.residual2(r1, training=training)
+        r3 = self.residual3(r2, training=training)
 
         # Upsampling
         u1 = self.upsample1(r3, training=training)

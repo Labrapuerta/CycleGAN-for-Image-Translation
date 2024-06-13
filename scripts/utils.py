@@ -128,4 +128,3 @@ class callbacks(tf.keras.callbacks.Callback):
             ax.axis('off')
             plt.show()
             
-callback = callbacks()
